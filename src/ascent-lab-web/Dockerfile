@@ -10,12 +10,11 @@ WORKDIR /src
 COPY ["src/ascent-lab-web/ascent-lab-web.csproj", "src/ascent-lab-web/"]
 RUN dotnet restore "src/ascent-lab-web/ascent-lab-web.csproj"
 COPY . .
-WORKDIR "/src/src/ascent-lab-web"
-RUN dotnet build "ascent-lab-web.csproj" -c $BUILD_CONFIGURATION -o /app/build
+RUN dotnet build "src/ascent-lab-web/ascent-lab-web.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "ascent-lab-web.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "src/ascent-lab-web/ascent-lab-web.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app
