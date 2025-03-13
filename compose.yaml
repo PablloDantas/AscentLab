@@ -6,6 +6,7 @@ services:
     build:
       context: .
       dockerfile: ascent-lab-api/Dockerfile
+    container_name: ascent-lab-api
     ports:
       - "8081:8090"  # Porta HTTP
     environment:
@@ -13,7 +14,28 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8090
     volumes:
-      - ./logs:/app/logs
+      - ./logs/api:/app/logs
+    restart: unless-stopped
+    networks:
+      - ascent-network
+
+  ascent-lab-web:
+    image: ascent-lab-web
+    build:
+      context: .
+      dockerfile: src/ascent-lab-web/Dockerfile
+    container_name: ascent-lab-web
+    ports:
+      - "8080:8080"  # Apenas porta HTTP
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      # Removi a configuração HTTPS
+      - APP_UID=1000
+    volumes:
+      - ./logs/web:/app/logs
+      # Adicionando volume para DataProtection-Keys
+      - data-protection-keys:/home/app/.aspnet/DataProtection-Keys
     restart: unless-stopped
     networks:
       - ascent-network
@@ -21,3 +43,7 @@ services:
 networks:
   ascent-network:
     driver: bridge
+
+volumes:
+  data-protection-keys:
+  # Volume para persistir as chaves de proteção de dados

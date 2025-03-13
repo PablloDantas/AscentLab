@@ -13,11 +13,23 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
 
 app.UseRouting();
 
 app.UseAuthorization();
+
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path.Value == "/" || context.Request.Path.Value == "/index.html")
+    {
+        context.Response.Redirect("/Index");
+        return;
+    }
+    
+    await next();
+});
+
 
 app.MapStaticAssets();
 app.MapRazorPages()
