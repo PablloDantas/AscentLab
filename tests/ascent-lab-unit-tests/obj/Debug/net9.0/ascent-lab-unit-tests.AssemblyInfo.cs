@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ascent-lab-unit-tests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e9c4cdbb0d3ab070f5d3a803d99ab3445cfe493e")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f79d97237b66563c85e32ff36490d2a7f6c4c51b")]
 [assembly: System.Reflection.AssemblyProductAttribute("ascent-lab-unit-tests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ascent-lab-unit-tests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
