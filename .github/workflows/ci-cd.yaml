@@ -45,7 +45,7 @@ jobs:
         run: dotnet publish src/ascent-lab-web/ascent-lab-web.csproj --configuration Release --output ./publish-web
 
       - name: Build para deploy API
-        run: dotnet publish /ascent-lab-api/ascent-lab-api.csproj --configuration Release --output ./publish-api
+        run: dotnet publish ascent-lab-api/ascent-lab-api.csproj --configuration Release --output ./publish-api
       
       # - name: Deploy Web para Render
       #   run: |
