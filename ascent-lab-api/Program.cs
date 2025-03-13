@@ -1,27 +1,21 @@
+using Microsoft.AspNetCore.Server.Kestrel.Core;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Configuração simplificada de HTTP
-if (!builder.Environment.IsDevelopment())
+// Configuração da porta - use a variável de ambiente PORT que o container/host define
+var port = int.Parse(Environment.GetEnvironmentVariable("PORT") ?? "8080");
+
+// Importante: Remova todas as outras configurações de URL/porta antes desta
+builder.Services.Configure<KestrelServerOptions>(options =>
 {
-    // Configurar apenas para usar HTTP em uma porta específica (você pode usar uma variável de ambiente)
-    var port = builder.Configuration.GetValue<int>("PORT", 8080);
-    builder.WebHost.ConfigureKestrel(serverOptions =>
-    {
-        // Limpar listeners anteriores
-        serverOptions.ConfigureEndpointDefaults(listenOptions => { });
-        // Configurar apenas HTTP
-        serverOptions.ListenAnyIP(port,
-            listenOptions =>
-            {
-                listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1AndHttp2;
-            });
-    });
-}
-else
-{
-    // Para desenvolvimento, use a configuração padrão ou específica
-    builder.WebHost.UseUrls("http://localhost:5000");
-}
+    // Limpar todas as configurações anteriores
+    options.ConfigureEndpointDefaults(lo => { });
+
+    // Configurar apenas uma única porta
+    options.ListenAnyIP(port);
+});
+
+// Remova qualquer uso adicional de UseUrls ou ConfigureKestrel
 
 builder.Services.AddOpenApi();
 builder.Services.AddSwaggerGen(c =>
@@ -29,44 +23,51 @@ builder.Services.AddSwaggerGen(c =>
     var swaggerConfig = builder.Configuration.GetSection("Swagger");
     c.SwaggerDoc("v1", new()
     {
-        Title = swaggerConfig["Title"],
-        Version = swaggerConfig["Version"],
-        Description = swaggerConfig["Description"]
+        Title = swaggerConfig["Title"] ?? "API",
+        Version = swaggerConfig["Version"] ?? "v1",
+        Description = swaggerConfig["Description"] ?? "API Description"
     });
 });
 
-// Depois de todas as configurações, gera a aplicação
 var app = builder.Build();
 
-// Configuração do pipeline HTTP
+// Exibir a porta que está sendo usada (para debug)
+app.Logger.LogInformation($"Application starting on port {port}");
+
+// Configure o middleware da aplicação
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Ascent Lab API v1");
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "API v1");
         c.RoutePrefix = string.Empty;
-        c.DocExpansion(Swashbuckle.AspNetCore.SwaggerUI.DocExpansion.None);
-        c.DefaultModelExpandDepth(0);
-        c.DefaultModelsExpandDepth(-1);
-        c.DefaultModelRendering(Swashbuckle.AspNetCore.SwaggerUI.ModelRendering.Example);
-        c.DisplayOperationId();
-        c.DisplayRequestDuration();
-        c.EnableDeepLinking();
-        c.EnableFilter();
-        c.ShowExtensions();
     });
-
     app.MapOpenApi();
 }
-
-var summaries = new[]
+else
 {
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+    // Para ambientes de produção também é útil ter Swagger
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "API v1");
+        c.RoutePrefix = string.Empty;
+    });
+}
 
+// Rota para verificar se a aplicação está funcionando
+app.MapGet("/", () => "API is running!")
+    .WithName("Root");
+
+// Outras rotas
 app.MapGet("/weatherforecast", () =>
     {
+        var summaries = new[]
+        {
+            "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
+        };
+
         var forecast = Enumerable.Range(1, 5).Select(index =>
                 new WeatherForecast
                 (

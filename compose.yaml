@@ -7,10 +7,11 @@ services:
       context: .
       dockerfile: ascent-lab-api/Dockerfile
     ports:
-      - "8080:8080"  # Porta HTTP
+      - "8081:8090"  # Porta HTTP
     environment:
+      - PORT=8090
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=http://+:8080
+      - ASPNETCORE_URLS=http://+:8090
     volumes:
       - ./logs:/app/logs
     restart: unless-stopped
