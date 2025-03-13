@@ -1,0 +1,49 @@
+name: CI/CD - Ascent Lab
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v3
+
+      - name: Configurar .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restaurar dependências
+        run: dotnet restore
+
+      - name: Build da solução
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Executar testes (Unitários e Integração)
+        run: dotnet test --configuration Release --no-build --verbosity normal
+  
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v3
+
+      - name: Configurar .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Build para deploy
+        run: dotnet publish src/AscentLab.Web/AscentLab.Web.csproj --configuration Release --output ./publish
+      
+      # - name: Deploy para Render
+      #   run: |
+      #     render deploy --api-key ${{ secrets.RENDER_API_KEY }} --service-id ${{ secrets.RENDER_SERVICE_ID }}
