@@ -1,35 +1,26 @@
 var builder = WebApplication.CreateBuilder(args);
 
-// Configuração de URLs padrão
-builder.WebHost.UseUrls("http://+:8080");
-
-// Configuração condicional para ambientes que não sejam de desenvolvimento
+// Configuração simplificada de HTTP
 if (!builder.Environment.IsDevelopment())
 {
-    // Configura apenas HTTP na porta 8080
-    builder.WebHost.ConfigureKestrel(serverOptions => { serverOptions.ListenAnyIP(8080); });
-
-    // Remover qualquer URL HTTPS das configurações, se existir
-    var urls = builder.Configuration["URLS"] ?? builder.Configuration["ASPNETCORE_URLS"];
-    if (!string.IsNullOrEmpty(urls))
+    // Configurar apenas para usar HTTP em uma porta específica (você pode usar uma variável de ambiente)
+    var port = builder.Configuration.GetValue<int>("PORT", 8080);
+    builder.WebHost.ConfigureKestrel(serverOptions =>
     {
-        var httpUrls = urls.Split(';')
-            .Where(url => url.StartsWith("http://"))
-            .ToArray();
-
-        if (httpUrls.Length > 0)
-        {
-            builder.WebHost.UseUrls(httpUrls);
-        }
-        else
-        {
-            builder.WebHost.UseUrls("http://+:8080");
-        }
-    }
-    else
-    {
-        builder.WebHost.UseUrls("http://+:8080");
-    }
+        // Limpar listeners anteriores
+        serverOptions.ConfigureEndpointDefaults(listenOptions => { });
+        // Configurar apenas HTTP
+        serverOptions.ListenAnyIP(port,
+            listenOptions =>
+            {
+                listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1AndHttp2;
+            });
+    });
+}
+else
+{
+    // Para desenvolvimento, use a configuração padrão ou específica
+    builder.WebHost.UseUrls("http://localhost:5000");
 }
 
 builder.Services.AddOpenApi();
@@ -47,7 +38,7 @@ builder.Services.AddSwaggerGen(c =>
 // Depois de todas as configurações, gera a aplicação
 var app = builder.Build();
 
-// Configuração do pipeline HTTP para ambiente de desenvolvimento
+// Configuração do pipeline HTTP
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
