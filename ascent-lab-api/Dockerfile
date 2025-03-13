@@ -1,6 +1,4 @@
 ﻿FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
-#ARG APP_UID=1000
-#USER $APP_UID
 WORKDIR /app
 EXPOSE 8080
 EXPOSE 8443
@@ -20,5 +18,6 @@ RUN dotnet publish "ascent-lab-api/ascent-lab-api.csproj" -c $BUILD_CONFIGURATIO
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+COPY ./certs/devcert.pfx /app/certs/devcert.pfx
 ENV ENV ASPNETCORE_ENVIRONMENT=Development
 ENTRYPOINT ["dotnet", "ascent-lab-api.dll"]
