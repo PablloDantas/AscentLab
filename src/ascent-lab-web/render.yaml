@@ -2,7 +2,7 @@
   - type: web
     name: ascent-lab-web
     runtime: dotnet
-    buildCommand: dotnet publish -c Release -o out
+    buildCommand: dotnet publish src/ascent-lab-web/ascent-lab-web.csproj -c Release -o out
     startCommand: cd out && dotnet ascent-lab-web.dll
     envVars:
       - key: ASPNETCORE_ENVIRONMENT
