@@ -1,27 +1,30 @@
+using Microsoft.Playwright;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using PageTest = Microsoft.Playwright.NUnit.PageTest;
+
 namespace ascent_lab_e2e_tests;
 
-[Parallelizable(ParallelScope.Self)]
-[TestFixture]
-public class Tests : PageTest
+[TestClass]
+public class ExampleTest : PageTest
 {
-    [Test]
-    public async Task HomepageHasPlaywrightInTitleAndGetStartedLinkLinkingtoTheIntroPage()
+    [TestMethod]
+    public async Task HasTitle()
     {
         await Page.GotoAsync("https://playwright.dev");
 
         // Expect a title "to contain" a substring.
         await Expect(Page).ToHaveTitleAsync(new Regex("Playwright"));
+    }
 
-        // create a locator
-        var getStarted = Page.Locator("text=Get Started");
-
-        // Expect an attribute "to be strictly equal" to the value.
-        await Expect(getStarted).ToHaveAttributeAsync("href", "/docs/intro");
+    [TestMethod]
+    public async Task GetStartedLink()
+    {
+        await Page.GotoAsync("https://playwright.dev");
 
         // Click the get started link.
-        await getStarted.ClickAsync();
+        await Page.GetByRole(AriaRole.Link, new() { Name = "Get started" }).ClickAsync();
 
-        // Expects the URL to contain intro.
-        await Expect(Page).ToHaveURLAsync(new Regex(".*intro"));
-    }
+        // Expects page to have a heading with the name of Installation.
+        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Installation" })).ToBeVisibleAsync();
+    } 
 }
