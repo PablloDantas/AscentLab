@@ -5,27 +5,18 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.Playwright = void 0;
 exports.createPlaywright = createPlaywright;
-
 var _android = require("./android/android");
-
 var _backendAdb = require("./android/backendAdb");
-
 var _chromium = require("./chromium/chromium");
-
 var _electron = require("./electron/electron");
-
 var _firefox = require("./firefox/firefox");
-
 var _selectors = require("./selectors");
-
 var _webkit = require("./webkit/webkit");
-
 var _instrumentation = require("./instrumentation");
-
-var _debugLogger = require("../common/debugLogger");
-
+var _utils = require("../utils");
 var _debugController = require("./debugController");
-
+var _bidiChromium = require("./bidi/bidiChromium");
+var _bidiFirefox = require("./bidi/bidiFirefox");
 /**
  * Copyright (c) Microsoft Corporation.
  *
@@ -41,12 +32,11 @@ var _debugController = require("./debugController");
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 class Playwright extends _instrumentation.SdkObject {
-  constructor(sdkLanguage, isInternalPlaywright) {
+  constructor(options) {
     super({
-      attribution: {
-        isInternalPlaywright
-      },
+      attribution: {},
       instrumentation: (0, _instrumentation.createInstrumentation)()
     }, undefined, 'Playwright');
     this.selectors = void 0;
@@ -55,49 +45,44 @@ class Playwright extends _instrumentation.SdkObject {
     this.electron = void 0;
     this.firefox = void 0;
     this.webkit = void 0;
+    this.bidiChromium = void 0;
+    this.bidiFirefox = void 0;
     this.options = void 0;
     this.debugController = void 0;
     this._allPages = new Set();
     this._allBrowsers = new Set();
+    this.options = options;
+    this.attribution.playwright = this;
     this.instrumentation.addListener({
       onBrowserOpen: browser => this._allBrowsers.add(browser),
       onBrowserClose: browser => this._allBrowsers.delete(browser),
       onPageOpen: page => this._allPages.add(page),
       onPageClose: page => this._allPages.delete(page),
       onCallLog: (sdkObject, metadata, logName, message) => {
-        _debugLogger.debugLogger.log(logName, message);
+        _utils.debugLogger.log(logName, message);
       }
     }, null);
-    this.options = {
-      rootSdkObject: this,
-      selectors: new _selectors.Selectors(),
-      sdkLanguage: sdkLanguage
-    };
-    this.chromium = new _chromium.Chromium(this.options);
-    this.firefox = new _firefox.Firefox(this.options);
-    this.webkit = new _webkit.WebKit(this.options);
-    this.electron = new _electron.Electron(this.options);
-    this.android = new _android.Android(new _backendAdb.AdbBackend(), this.options);
-    this.selectors = this.options.selectors;
+    this.chromium = new _chromium.Chromium(this);
+    this.bidiChromium = new _bidiChromium.BidiChromium(this);
+    this.bidiFirefox = new _bidiFirefox.BidiFirefox(this);
+    this.firefox = new _firefox.Firefox(this);
+    this.webkit = new _webkit.WebKit(this);
+    this.electron = new _electron.Electron(this);
+    this.android = new _android.Android(this, new _backendAdb.AdbBackend());
+    this.selectors = new _selectors.Selectors();
     this.debugController = new _debugController.DebugController(this);
   }
-
   async hideHighlight() {
     await Promise.all([...this._allPages].map(p => p.hideHighlight().catch(() => {})));
   }
-
   allBrowsers() {
     return [...this._allBrowsers];
   }
-
   allPages() {
     return [...this._allPages];
   }
-
 }
-
 exports.Playwright = Playwright;
-
-function createPlaywright(sdkLanguage, isInternalPlaywright = false) {
-  return new Playwright(sdkLanguage, isInternalPlaywright);
+function createPlaywright(options) {
+  return new Playwright(options);
 }

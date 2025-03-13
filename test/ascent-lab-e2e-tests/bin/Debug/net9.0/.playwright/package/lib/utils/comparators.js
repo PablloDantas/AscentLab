@@ -3,16 +3,12 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.compareBuffersOrStrings = compareBuffersOrStrings;
 exports.getComparator = getComparator;
-
 var _utilsBundle = require("../utilsBundle");
-
 var _pixelmatch = _interopRequireDefault(require("../third_party/pixelmatch"));
-
-var _diff_match_patch = require("../third_party/diff_match_patch");
-
+var _compare = require("../image_tools/compare");
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 /**
  * Copyright 2017 Google Inc. All rights reserved.
  * Modifications copyright (c) Microsoft Corporation.
@@ -29,13 +25,15 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+// @ts-ignore
+
 function getComparator(mimeType) {
   if (mimeType === 'image/png') return compareImages.bind(null, 'image/png');
   if (mimeType === 'image/jpeg') return compareImages.bind(null, 'image/jpeg');
   if (mimeType === 'text/plain') return compareText;
   return compareBuffersOrStrings;
 }
-
 const JPEG_JS_MAX_BUFFER_SIZE_IN_MB = 5 * 1024; // ~5 GB
 
 function compareBuffersOrStrings(actualBuffer, expectedBuffer) {
@@ -48,82 +46,114 @@ function compareBuffersOrStrings(actualBuffer, expectedBuffer) {
   };
   return null;
 }
-
 function compareImages(mimeType, actualBuffer, expectedBuffer, options = {}) {
-  var _options$threshold, _ref;
-
+  var _options$comparator, _ref;
   if (!actualBuffer || !(actualBuffer instanceof Buffer)) return {
     errorMessage: 'Actual result should be a Buffer.'
   };
-  const actual = mimeType === 'image/png' ? _utilsBundle.PNG.sync.read(actualBuffer) : _utilsBundle.jpegjs.decode(actualBuffer, {
+  validateBuffer(expectedBuffer, mimeType);
+  let actual = mimeType === 'image/png' ? _utilsBundle.PNG.sync.read(actualBuffer) : _utilsBundle.jpegjs.decode(actualBuffer, {
     maxMemoryUsageInMB: JPEG_JS_MAX_BUFFER_SIZE_IN_MB
   });
-  const expected = mimeType === 'image/png' ? _utilsBundle.PNG.sync.read(expectedBuffer) : _utilsBundle.jpegjs.decode(expectedBuffer, {
+  let expected = mimeType === 'image/png' ? _utilsBundle.PNG.sync.read(expectedBuffer) : _utilsBundle.jpegjs.decode(expectedBuffer, {
     maxMemoryUsageInMB: JPEG_JS_MAX_BUFFER_SIZE_IN_MB
   });
-
+  const size = {
+    width: Math.max(expected.width, actual.width),
+    height: Math.max(expected.height, actual.height)
+  };
+  let sizesMismatchError = '';
   if (expected.width !== actual.width || expected.height !== actual.height) {
-    return {
-      errorMessage: `Expected an image ${expected.width}px by ${expected.height}px, received ${actual.width}px by ${actual.height}px. `
-    };
+    sizesMismatchError = `Expected an image ${expected.width}px by ${expected.height}px, received ${actual.width}px by ${actual.height}px. `;
+    actual = resizeImage(actual, size);
+    expected = resizeImage(expected, size);
   }
-
   const diff = new _utilsBundle.PNG({
-    width: expected.width,
-    height: expected.height
+    width: size.width,
+    height: size.height
   });
-  const count = (0, _pixelmatch.default)(expected.data, actual.data, diff.data, expected.width, expected.height, {
-    threshold: (_options$threshold = options.threshold) !== null && _options$threshold !== void 0 ? _options$threshold : 0.2
-  });
+  let count;
+  if (options.comparator === 'ssim-cie94') {
+    count = (0, _compare.compare)(expected.data, actual.data, diff.data, size.width, size.height, {
+      // All ΔE* formulae are originally designed to have the difference of 1.0 stand for a "just noticeable difference" (JND).
+      // See https://en.wikipedia.org/wiki/Color_difference#CIELAB_%CE%94E*
+      maxColorDeltaE94: 1.0
+    });
+  } else if (((_options$comparator = options.comparator) !== null && _options$comparator !== void 0 ? _options$comparator : 'pixelmatch') === 'pixelmatch') {
+    var _options$threshold;
+    count = (0, _pixelmatch.default)(expected.data, actual.data, diff.data, size.width, size.height, {
+      threshold: (_options$threshold = options.threshold) !== null && _options$threshold !== void 0 ? _options$threshold : 0.2
+    });
+  } else {
+    throw new Error(`Configuration specifies unknown comparator "${options.comparator}"`);
+  }
   const maxDiffPixels1 = options.maxDiffPixels;
   const maxDiffPixels2 = options.maxDiffPixelRatio !== undefined ? expected.width * expected.height * options.maxDiffPixelRatio : undefined;
   let maxDiffPixels;
   if (maxDiffPixels1 !== undefined && maxDiffPixels2 !== undefined) maxDiffPixels = Math.min(maxDiffPixels1, maxDiffPixels2);else maxDiffPixels = (_ref = maxDiffPixels1 !== null && maxDiffPixels1 !== void 0 ? maxDiffPixels1 : maxDiffPixels2) !== null && _ref !== void 0 ? _ref : 0;
   const ratio = Math.ceil(count / (expected.width * expected.height) * 100) / 100;
-  return count > maxDiffPixels ? {
-    errorMessage: `${count} pixels (ratio ${ratio.toFixed(2)} of all image pixels) are different`,
+  const pixelsMismatchError = count > maxDiffPixels ? `${count} pixels (ratio ${ratio.toFixed(2)} of all image pixels) are different.` : '';
+  if (pixelsMismatchError || sizesMismatchError) return {
+    errorMessage: sizesMismatchError + pixelsMismatchError,
     diff: _utilsBundle.PNG.sync.write(diff)
-  } : null;
+  };
+  return null;
 }
-
+function validateBuffer(buffer, mimeType) {
+  if (mimeType === 'image/png') {
+    const pngMagicNumber = [137, 80, 78, 71, 13, 10, 26, 10];
+    if (buffer.length < pngMagicNumber.length || !pngMagicNumber.every((byte, index) => buffer[index] === byte)) throw new Error('could not decode image as PNG.');
+  } else if (mimeType === 'image/jpeg') {
+    const jpegMagicNumber = [255, 216];
+    if (buffer.length < jpegMagicNumber.length || !jpegMagicNumber.every((byte, index) => buffer[index] === byte)) throw new Error('could not decode image as JPEG.');
+  }
+}
 function compareText(actual, expectedBuffer) {
   if (typeof actual !== 'string') return {
     errorMessage: 'Actual result should be a string'
   };
-  const expected = expectedBuffer.toString('utf-8');
+  let expected = expectedBuffer.toString('utf-8');
   if (expected === actual) return null;
-  const dmp = new _diff_match_patch.diff_match_patch();
-  const d = dmp.diff_main(expected, actual);
-  dmp.diff_cleanupSemantic(d);
+  // Eliminate '\\ No newline at end of file'
+  if (!actual.endsWith('\n')) actual += '\n';
+  if (!expected.endsWith('\n')) expected += '\n';
+  const lines = _utilsBundle.diff.createPatch('file', expected, actual, undefined, undefined, {
+    context: 5
+  }).split('\n');
+  const coloredLines = lines.slice(4).map(line => {
+    if (line.startsWith('-')) return _utilsBundle.colors.red(line);
+    if (line.startsWith('+')) return _utilsBundle.colors.green(line);
+    if (line.startsWith('@@')) return _utilsBundle.colors.dim(line);
+    return line;
+  });
+  const errorMessage = coloredLines.join('\n');
   return {
-    errorMessage: diff_prettyTerminal(d)
+    errorMessage
   };
 }
-
-function diff_prettyTerminal(diffs) {
-  const html = [];
-
-  for (let x = 0; x < diffs.length; x++) {
-    const op = diffs[x][0]; // Operation (insert, delete, equal)
-
-    const data = diffs[x][1]; // Text of change.
-
-    const text = data;
-
-    switch (op) {
-      case _diff_match_patch.DIFF_INSERT:
-        html[x] = _utilsBundle.colors.green(text);
-        break;
-
-      case _diff_match_patch.DIFF_DELETE:
-        html[x] = _utilsBundle.colors.reset(_utilsBundle.colors.strikethrough(_utilsBundle.colors.red(text)));
-        break;
-
-      case _diff_match_patch.DIFF_EQUAL:
-        html[x] = text;
-        break;
+function resizeImage(image, size) {
+  if (image.width === size.width && image.height === size.height) return image;
+  const buffer = new Uint8Array(size.width * size.height * 4);
+  for (let y = 0; y < size.height; y++) {
+    for (let x = 0; x < size.width; x++) {
+      const to = (y * size.width + x) * 4;
+      if (y < image.height && x < image.width) {
+        const from = (y * image.width + x) * 4;
+        buffer[to] = image.data[from];
+        buffer[to + 1] = image.data[from + 1];
+        buffer[to + 2] = image.data[from + 2];
+        buffer[to + 3] = image.data[from + 3];
+      } else {
+        buffer[to] = 0;
+        buffer[to + 1] = 0;
+        buffer[to + 2] = 0;
+        buffer[to + 3] = 0;
+      }
     }
   }
-
-  return html.join('');
+  return {
+    data: Buffer.from(buffer),
+    width: size.width,
+    height: size.height
+  };
 }

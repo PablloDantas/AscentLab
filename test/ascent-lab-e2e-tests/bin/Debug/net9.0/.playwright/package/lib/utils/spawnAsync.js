@@ -4,9 +4,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.spawnAsync = spawnAsync;
-
 var _child_process = require("child_process");
-
 /**
  * Copyright (c) Microsoft Corporation.
  *
@@ -22,6 +20,7 @@ var _child_process = require("child_process");
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 function spawnAsync(cmd, args, options = {}) {
   const process = (0, _child_process.spawn)(cmd, args, Object.assign({
     windowsHide: true
@@ -29,8 +28,8 @@ function spawnAsync(cmd, args, options = {}) {
   return new Promise(resolve => {
     let stdout = '';
     let stderr = '';
-    if (process.stdout) process.stdout.on('data', data => stdout += data);
-    if (process.stderr) process.stderr.on('data', data => stderr += data);
+    if (process.stdout) process.stdout.on('data', data => stdout += data.toString());
+    if (process.stderr) process.stderr.on('data', data => stderr += data.toString());
     process.on('close', code => resolve({
       stdout,
       stderr,

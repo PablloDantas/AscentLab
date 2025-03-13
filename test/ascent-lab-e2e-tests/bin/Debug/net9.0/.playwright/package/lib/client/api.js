@@ -81,6 +81,12 @@ Object.defineProperty(exports, "CDPSession", {
     return _cdpSession.CDPSession;
   }
 });
+Object.defineProperty(exports, "Clock", {
+  enumerable: true,
+  get: function () {
+    return _clock.Clock;
+  }
+});
 Object.defineProperty(exports, "ConsoleMessage", {
   enumerable: true,
   get: function () {
@@ -225,10 +231,22 @@ Object.defineProperty(exports, "Video", {
     return _video.Video;
   }
 });
+Object.defineProperty(exports, "WebError", {
+  enumerable: true,
+  get: function () {
+    return _webError.WebError;
+  }
+});
 Object.defineProperty(exports, "WebSocket", {
   enumerable: true,
   get: function () {
     return _network.WebSocket;
+  }
+});
+Object.defineProperty(exports, "WebSocketRoute", {
+  enumerable: true,
+  get: function () {
+    return _network.WebSocketRoute;
   }
 });
 Object.defineProperty(exports, "Worker", {
@@ -237,55 +255,31 @@ Object.defineProperty(exports, "Worker", {
     return _worker.Worker;
   }
 });
-
 var _accessibility = require("./accessibility");
-
 var _android = require("./android");
-
 var _browser = require("./browser");
-
 var _browserContext = require("./browserContext");
-
 var _browserType = require("./browserType");
-
+var _clock = require("./clock");
 var _consoleMessage = require("./consoleMessage");
-
 var _coverage = require("./coverage");
-
 var _dialog = require("./dialog");
-
 var _download = require("./download");
-
 var _electron = require("./electron");
-
 var _locator = require("./locator");
-
 var _elementHandle = require("./elementHandle");
-
 var _fileChooser = require("./fileChooser");
-
-var _errors = require("../common/errors");
-
+var _errors = require("./errors");
 var _frame = require("./frame");
-
 var _input = require("./input");
-
 var _jsHandle = require("./jsHandle");
-
 var _network = require("./network");
-
 var _fetch = require("./fetch");
-
 var _page = require("./page");
-
 var _selectors = require("./selectors");
-
 var _tracing = require("./tracing");
-
 var _video = require("./video");
-
 var _worker = require("./worker");
-
 var _cdpSession = require("./cdpSession");
-
 var _playwright = require("./playwright");
+var _webError = require("./webError");
