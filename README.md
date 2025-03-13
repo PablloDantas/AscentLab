@@ -1,4 +1,4 @@
-# Ascent Lab - O ponto de encontro dos Engenheiros Lunáticos
+# Ascent Lab - Blog
 
 Bem-vindo ao **Ascent Lab**, o ponto de encontro dos engenheiros lunáticos!  
 Este projeto open source tem como objetivo reunir profissionais que ousam transformar a prática da engenharia civil, promovendo conhecimento e inovação por meio de um blog dinâmico e colaborativo.
