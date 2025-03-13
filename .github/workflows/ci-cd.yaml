@@ -41,10 +41,16 @@ jobs:
         with:
           dotnet-version: '9.0.x'
 
-      - name: Build para deploy
-        run: dotnet publish src/AscentLab.Web/AscentLab.Web.csproj --configuration Release --output ./publish
+      - name: Build para deploy Web
+        run: dotnet publish src/ascent-lab-web/ascent-lab-web.csproj --configuration Release --output ./publish-web
+
+      - name: Build para deploy API
+        run: dotnet publish src/ascent-lab-api/ascent-lab-api.csproj --configuration Release --output ./publish-api
       
-      # - name: Deploy para Render
-      
+      # - name: Deploy Web para Render
       #   run: |
-      #     render deploy --api-key ${{ secrets.RENDER_API_KEY }} --service-id ${{ secrets.RENDER_SERVICE_ID }}
+      #     render deploy --api-key ${{ secrets.RENDER_API_KEY }} --service-id ${{ secrets.RENDER_WEB_SERVICE_ID }} --dir ./publish-web
+      
+      # - name: Deploy API para Render
+      #   run: |
+      #     render deploy --api-key ${{ secrets.RENDER_API_KEY }} --service-id ${{ secrets.RENDER_API_SERVICE_ID }} --dir ./publish-api
