@@ -4,9 +4,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.TimeoutSettings = exports.DEFAULT_TIMEOUT = exports.DEFAULT_LAUNCH_TIMEOUT = void 0;
-
 var _utils = require("../utils");
-
 /**
  * Copyright 2019 Google Inc. All rights reserved.
  * Modifications copyright (c) Microsoft Corporation.
@@ -23,11 +21,9 @@ var _utils = require("../utils");
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const DEFAULT_TIMEOUT = 30000;
-exports.DEFAULT_TIMEOUT = DEFAULT_TIMEOUT;
-const DEFAULT_LAUNCH_TIMEOUT = 3 * 60 * 1000; // 3 minutes
 
-exports.DEFAULT_LAUNCH_TIMEOUT = DEFAULT_LAUNCH_TIMEOUT;
+const DEFAULT_TIMEOUT = exports.DEFAULT_TIMEOUT = 30000;
+const DEFAULT_LAUNCH_TIMEOUT = exports.DEFAULT_LAUNCH_TIMEOUT = 3 * 60 * 1000; // 3 minutes
 
 class TimeoutSettings {
   constructor(parent) {
@@ -36,15 +32,18 @@ class TimeoutSettings {
     this._defaultNavigationTimeout = void 0;
     this._parent = parent;
   }
-
   setDefaultTimeout(timeout) {
     this._defaultTimeout = timeout;
   }
-
   setDefaultNavigationTimeout(timeout) {
     this._defaultNavigationTimeout = timeout;
   }
-
+  defaultNavigationTimeout() {
+    return this._defaultNavigationTimeout;
+  }
+  defaultTimeout() {
+    return this._defaultTimeout;
+  }
   navigationTimeout(options) {
     if (typeof options.timeout === 'number') return options.timeout;
     if (this._defaultNavigationTimeout !== undefined) return this._defaultNavigationTimeout;
@@ -53,7 +52,6 @@ class TimeoutSettings {
     if (this._parent) return this._parent.navigationTimeout(options);
     return DEFAULT_TIMEOUT;
   }
-
   timeout(options) {
     if (typeof options.timeout === 'number') return options.timeout;
     if ((0, _utils.debugMode)()) return 0;
@@ -61,19 +59,15 @@ class TimeoutSettings {
     if (this._parent) return this._parent.timeout(options);
     return DEFAULT_TIMEOUT;
   }
-
   static timeout(options) {
     if (typeof options.timeout === 'number') return options.timeout;
     if ((0, _utils.debugMode)()) return 0;
     return DEFAULT_TIMEOUT;
   }
-
   static launchTimeout(options) {
     if (typeof options.timeout === 'number') return options.timeout;
     if ((0, _utils.debugMode)()) return 0;
     return DEFAULT_LAUNCH_TIMEOUT;
   }
-
 }
-
 exports.TimeoutSettings = TimeoutSettings;

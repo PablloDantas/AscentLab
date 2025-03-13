@@ -4,11 +4,38 @@ var builder = WebApplication.CreateBuilder(args);
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
+builder.Services.AddSwaggerGen(c =>
+{
+    var swaggerConfig = builder.Configuration.GetSection("Swagger");
+    c.SwaggerDoc("v1", new() { 
+        Title = swaggerConfig["Title"], 
+        Version = swaggerConfig["Version"],
+        Description = swaggerConfig["Description"]
+    });
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    app.UseSwagger();
+    app.UseSwaggerUI(c => 
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Ascent Lab API v1");
+        c.RoutePrefix = string.Empty;
+        c.DocExpansion(Swashbuckle.AspNetCore.SwaggerUI.DocExpansion.None);
+        c.DefaultModelExpandDepth(0);
+        c.DefaultModelsExpandDepth(-1);
+        c.DefaultModelRendering(Swashbuckle.AspNetCore.SwaggerUI.ModelRendering.Example);
+        c.DisplayOperationId();
+        c.DisplayRequestDuration();
+        c.EnableDeepLinking();
+        c.EnableFilter();
+        c.ShowExtensions();
+
+    });
+
     app.MapOpenApi();
 }
 

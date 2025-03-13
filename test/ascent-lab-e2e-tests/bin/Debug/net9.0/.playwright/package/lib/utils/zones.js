@@ -3,10 +3,8 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.zones = void 0;
-
-var _stackTrace = require("./stackTrace");
-
+exports.zones = exports.Zone = void 0;
+var _async_hooks = require("async_hooks");
 /**
  * Copyright (c) Microsoft Corporation.
  *
@@ -22,65 +20,50 @@ var _stackTrace = require("./stackTrace");
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 class ZoneManager {
   constructor() {
-    this.lastZoneId = 0;
-    this._zones = new Map();
+    this._asyncLocalStorage = new _async_hooks.AsyncLocalStorage();
+    this._emptyZone = Zone.createEmpty(this._asyncLocalStorage);
   }
-
-  async run(type, data, func) {
-    const zone = new Zone(this, ++this.lastZoneId, type, data);
-
-    this._zones.set(zone.id, zone);
-
-    return zone.run(func);
+  run(type, data, func) {
+    return this.current().with(type, data).run(func);
   }
-
-  zoneData(type, rawStack) {
-    const stack = rawStack || (0, _stackTrace.captureRawStack)();
-
-    for (const line of stack.split('\n')) {
-      const index = line.indexOf('__PWZONE__[');
-
-      if (index !== -1) {
-        const zoneId = +line.substring(index + '__PWZONE__['.length, line.indexOf(']', index));
-
-        const zone = this._zones.get(zoneId);
-
-        if (zone && zone.type === type) return zone.data;
-      }
-    }
-
-    return null;
+  zoneData(type) {
+    return this.current().data(type);
   }
-
+  current() {
+    var _this$_asyncLocalStor;
+    return (_this$_asyncLocalStor = this._asyncLocalStorage.getStore()) !== null && _this$_asyncLocalStor !== void 0 ? _this$_asyncLocalStor : this._emptyZone;
+  }
+  empty() {
+    return this._emptyZone;
+  }
 }
-
 class Zone {
-  constructor(manager, id, type, data) {
-    this._manager = void 0;
-    this.id = void 0;
-    this.type = void 0;
-    this.data = {};
-    this._manager = manager;
-    this.id = id;
-    this.type = type;
-    this.data = data;
+  static createEmpty(asyncLocalStorage) {
+    return new Zone(asyncLocalStorage, new Map());
   }
-
-  async run(func) {
-    Object.defineProperty(func, 'name', {
-      value: `__PWZONE__[${this.id}]`
-    });
-
-    try {
-      return await func();
-    } finally {
-      this._manager._zones.delete(this.id);
-    }
+  constructor(asyncLocalStorage, store) {
+    this._asyncLocalStorage = void 0;
+    this._data = void 0;
+    this._asyncLocalStorage = asyncLocalStorage;
+    this._data = store;
   }
-
+  with(type, data) {
+    return new Zone(this._asyncLocalStorage, new Map(this._data).set(type, data));
+  }
+  without(type) {
+    const data = type ? new Map(this._data) : new Map();
+    data.delete(type);
+    return new Zone(this._asyncLocalStorage, data);
+  }
+  run(func) {
+    return this._asyncLocalStorage.run(this, func);
+  }
+  data(type) {
+    return this._data.get(type);
+  }
 }
-
-const zones = new ZoneManager();
-exports.zones = zones;
+exports.Zone = Zone;
+const zones = exports.zones = new ZoneManager();
