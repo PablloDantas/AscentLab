@@ -18,6 +18,5 @@ RUN dotnet publish "ascent-lab-api/ascent-lab-api.csproj" -c $BUILD_CONFIGURATIO
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-COPY ./certs/devcert.pfx /app/certs/devcert.pfx
 ENV ENV ASPNETCORE_ENVIRONMENT=Development
 ENTRYPOINT ["dotnet", "ascent-lab-api.dll"]

@@ -7,17 +7,14 @@ services:
       context: .
       dockerfile: ascent-lab-api/Dockerfile
     ports:
-      - "8080:8080"  # Mantido para redirecionamento
-      - "8443:8443"  # Nova porta HTTPS
+      - "8080:8080"  # Porta HTTP
+      - "8443:8443"  # Porta HTTPS
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=https://+:8443;http://+:8080
-      - ASPNETCORE_Kestrel__Certificates__Default__Path=/app/certs/devcert.pfx
-      - ASPNETCORE_Kestrel__Certificates__Default__Password=password123
       - ASPNETCORE_HTTPS_PORT=8443
     volumes:
       - ./logs:/app/logs
-      - ./certs:/app/certs:ro  # Volume para certificados
     restart: unless-stopped
     networks:
       - ascent-network
