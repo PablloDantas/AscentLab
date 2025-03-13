@@ -1,7 +1,7 @@
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.WebHost.UseUrls("http://+:8080");
+
 builder.Services.AddOpenApi();
 
 builder.Services.AddSwaggerGen(c =>
@@ -15,6 +15,42 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 var app = builder.Build();
+
+// Configuração condicional de URLs baseada no ambiente
+if (!builder.Environment.IsDevelopment())
+{
+    // Em produção, usa apenas HTTP
+    builder.WebHost.ConfigureKestrel(serverOptions =>
+    {
+        serverOptions.ListenAnyIP(8080); // Apenas HTTP na porta 8080
+    });
+}
+
+if (!builder.Environment.IsDevelopment())
+{
+    // Remove qualquer URL HTTPS das configurações
+    var urls = builder.Configuration["URLS"] ?? builder.Configuration["ASPNETCORE_URLS"];
+    if (!string.IsNullOrEmpty(urls))
+    {
+        var httpUrls = urls.Split(';')
+            .Where(url => url.StartsWith("http://"))
+            .ToArray();
+        
+        if (httpUrls.Length > 0)
+        {
+            builder.WebHost.UseUrls(httpUrls);
+        }
+        else
+        {
+            builder.WebHost.UseUrls("http://+:8080");
+        }
+    }
+    else
+    {
+        builder.WebHost.UseUrls("http://+:8080");
+    }
+}
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
