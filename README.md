@@ -12,7 +12,7 @@ Aqui, você encontrará conteúdos sobre:
 - **Desenvolvimento de Softwares**: Tutoriais, cursos gratuitos e ferramentas práticas.
 - **Colaboração e Conhecimento**: Um ambiente colaborativo para aprender e compartilhar experiências.
 
-## Funcionalidades
+## Requisitos
 
 ### Funcionais
 - **Postagens**: Artigos, posts e notícias com:
