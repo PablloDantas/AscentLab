@@ -3,7 +3,7 @@
 Bem-vindo ao **Ascent Lab**, o ponto de encontro dos engenheiros lunáticos!  
 Este projeto open source tem como objetivo reunir profissionais que ousam transformar a prática da engenharia civil, promovendo conhecimento e inovação por meio de um blog dinâmico e colaborativo.
 
-## Objetivo
+## 🎯Objetivo
 
 O Ascent Lab é um espaço dedicado aos profissionais da engenharia civil que querem ir além do convencional.  
 Aqui, você encontrará conteúdos sobre:
@@ -12,7 +12,7 @@ Aqui, você encontrará conteúdos sobre:
 - **Desenvolvimento de Softwares**: Tutoriais, cursos gratuitos e ferramentas práticas.
 - **Colaboração e Conhecimento**: Um ambiente colaborativo para aprender e compartilhar experiências.
 
-## Requisitos
+## 🧑‍🚀Requisitos
 
 ### Funcionais
 - **Postagens**: Artigos, posts e notícias com:
@@ -36,7 +36,7 @@ Aqui, você encontrará conteúdos sobre:
 - **Facilidade de Manutenção**: Código organizado e de fácil compreensão
 - **Curva de Aprendizado Reduzida**: Ferramentas intuitivas para desenvolvedores e colaboradores
 
-## Stack de Tecnologias
+## 🧑‍💻Stack de Tecnologias
 
 | **Área**                   | **Tecnologia / Abordagem**                                           |
 | -------------------------- | ---------------------------------------------------------------------|
@@ -58,7 +58,7 @@ Aqui, você encontrará conteúdos sobre:
 | **Analytics & SEO**        | Google Analytics e práticas avançadas de SEO on-page                   |
 | **Backup & Recovery**      | Backup gerenciado no Render + `pg_dump` externo                        |
 
-## Instalação e Configuração
+## 🪛Instalação e Configuração
 
 1. **Clone o Repositório**
    ```bash
